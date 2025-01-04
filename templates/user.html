@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Page - Real-Time Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1c1c1c;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 50px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #ffcc00;
+            margin-bottom: 50px;
+        }
+        .question-container {
+            margin-bottom: 30px;
+        }
+        .answers-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .answer-button {
+            padding: 15px 30px;
+            background-color: #333;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 250px;
+        }
+        .answer-button:hover {
+            background-color: #ffcc00;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Voting Page</h1>
+        <div class="question-container">
+            <div id="questionDisplay" style="font-size: 2rem;"></div>
+        </div>
+        <div class="answers-container" id="answersDisplay"></div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 Voting System. All rights reserved.</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Listen for question data from the host
+        socket.on('question_received', function(data) {
+            const questionDiv = document.getElementById('questionDisplay');
+            const answersDiv = document.getElementById('answersDisplay');
+
+            // Display the question
+            questionDiv.innerHTML = `<h2>${data.question}</h2>`;
+
+            // Clear any previous answers and add new ones
+            answersDiv.innerHTML = '';
+            data.answers.forEach((answer) => {
+                const button = document.createElement('button');
+                button.textContent = answer;
+                button.classList.add('answer-button'); // Add the styling class
+
+                // Emit the user's vote when a button is clicked
+                button.onclick = function() {
+                    socket.emit('user_vote', {question: data.question, answer});
+                    // Optionally, disable all buttons after voting
+                    disableVoteButtons();
+                };
+                answersDiv.appendChild(button);
+            });
+        });
+
+        // Disable all answer buttons after voting
+        function disableVoteButtons() {
+            const buttons = document.querySelectorAll('.answer-button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.style.backgroundColor = '#444'; // Change color to show they are disabled
+            });
+        }
+    </script>
+</body>
+</html>

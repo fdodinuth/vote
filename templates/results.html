@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1c1c1c;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 50px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #ffcc00;
+            margin-bottom: 50px;
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Real-Time Voting Results</h1>
+        <canvas id="resultsChart"></canvas>
+        <div class="legend" id="answerLegend"></div>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Voting System. All rights reserved.</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+    <script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        let chart = null;
+
+        // Listen for updates to the results from the host
+        socket.on('update_results', function(data) {
+            console.log("Received update_results:", data);
+
+            const questionVotes = data.votes;
+            const answers = Object.keys(questionVotes);
+            const votes = Object.values(questionVotes);
+
+            // If a chart already exists, destroy it and create a new one
+            if (chart) {
+                chart.destroy(); // Destroy the existing chart
+            }
+
+            // Create a new chart with the updated data (Bar chart)
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar', // Changed from 'pie' to 'bar'
+                data: {
+                    labels: answers,
+                    datasets: [{
+                        label: 'Votes',
+                        data: votes,
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
+                        borderColor: ['#fff', '#fff', '#fff', '#fff'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 16, // Adjusted font size for better readability
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.label + ': ' + tooltipItem.raw + ' votes';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                    color: '#fff' // Color for x-axis labels
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.2)' // Light grid color for better contrast
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                    color: '#fff' // Color for y-axis labels
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.2)' // Light grid color for better contrast
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update answer legend
+            const legendDiv = document.getElementById('answerLegend');
+            legendDiv.innerHTML = ''; // Clear previous legend
+            answers.forEach((answer, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.classList.add('legend-item');
+                const colorDiv = document.createElement('div');
+                colorDiv.classList.add('legend-color');
+                colorDiv.style.backgroundColor = chart.data.datasets[0].backgroundColor[index];
+                legendItem.appendChild(colorDiv);
+                legendItem.innerHTML += `${answer}`;
+                legendDiv.appendChild(legendItem);
+            });
+        });
+    </script>
+</body>
+</html>
