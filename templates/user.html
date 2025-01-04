@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Page - Real-Time Voting</title>
+    <title>Host Page - Real-Time Voting</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
@@ -24,28 +24,39 @@
             color: #ffcc00;
             margin-bottom: 50px;
         }
-        .question-container {
-            margin-bottom: 30px;
-        }
-        .answers-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        .answer-button {
-            padding: 15px 30px;
+        .form-container {
             background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            height: 50px;
+        }
+        .form-container button {
+            padding: 15px 30px;
+            background-color: #ffcc00;
             border: none;
             color: #fff;
             font-size: 1.2rem;
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            width: 250px;
+            width: 100%;
+            height: 50px;
         }
-        .answer-button:hover {
-            background-color: #ffcc00;
+        .form-container button:hover {
+            background-color: #e6b800;
         }
         .footer {
             position: fixed;
@@ -60,11 +71,18 @@
 </head>
 <body>
     <div class="container">
-        <h1>User Voting Page</h1>
-        <div class="question-container">
-            <div id="questionDisplay" style="font-size: 2rem;"></div>
+        <h1>Host Voting Page</h1>
+        <div class="form-container">
+            <h2>Enter a Question and Answers</h2>
+            <form id="questionForm">
+                <input type="text" id="question" placeholder="Enter your question" required><br>
+                <input type="text" id="answer1" placeholder="Answer 1" required><br>
+                <input type="text" id="answer2" placeholder="Answer 2" required><br>
+                <input type="text" id="answer3" placeholder="Answer 3" required><br>
+                <input type="text" id="answer4" placeholder="Answer 4" required><br>
+                <button type="submit">Send Question</button>
+            </form>
         </div>
-        <div class="answers-container" id="answersDisplay"></div>
     </div>
 
     <div class="footer">
@@ -75,38 +93,32 @@
     <script>
         const socket = io.connect('http://' + document.domain + ':' + location.port);
 
-        // Listen for question data from the host
-        socket.on('question_received', function(data) {
-            const questionDiv = document.getElementById('questionDisplay');
-            const answersDiv = document.getElementById('answersDisplay');
+        // Listen for form submission
+        const form = document.getElementById('questionForm');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent page refresh on submit
 
-            // Display the question
-            questionDiv.innerHTML = `<h2>${data.question}</h2>`;
+            const question = document.getElementById('question').value;
+            const answer1 = document.getElementById('answer1').value;
+            const answer2 = document.getElementById('answer2').value;
+            const answer3 = document.getElementById('answer3').value;
+            const answer4 = document.getElementById('answer4').value;
 
-            // Clear any previous answers and add new ones
-            answersDiv.innerHTML = '';
-            data.answers.forEach((answer) => {
-                const button = document.createElement('button');
-                button.textContent = answer;
-                button.classList.add('answer-button'); // Add the styling class
+            // Validate inputs
+            if (question && answer1 && answer2 && answer3 && answer4) {
+                // Send question and answers to the users
+                socket.emit('new_question', {
+                    question: question,
+                    answers: [answer1, answer2, answer3, answer4]
+                });
 
-                // Emit the user's vote when a button is clicked
-                button.onclick = function() {
-                    socket.emit('user_vote', {question: data.question, answer});
-                    disableVoteButtons();  // Disable all buttons after voting
-                };
-                answersDiv.appendChild(button);
-            });
+                // Clear the form after submission
+                form.reset();
+                alert('Question sent to users!');
+            } else {
+                alert('Please fill in all fields!');
+            }
         });
-
-        // Disable all answer buttons after voting
-        function disableVoteButtons() {
-            const buttons = document.querySelectorAll('.answer-button');
-            buttons.forEach(button => {
-                button.disabled = true;
-                button.style.backgroundColor = '#444'; // Change color to show they are disabled
-            });
-        }
     </script>
 </body>
 </html>
