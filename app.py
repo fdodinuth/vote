@@ -5,6 +5,7 @@ from flask_socketio import SocketIO, emit
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Initialize Flask app and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -44,7 +45,7 @@ def handle_user_vote(data):
 
     # Log updated votes
     logging.debug(f"Updated votes for '{question}': {votes[question]}")
-
+    
     # Send updated results to everyone (users and host)
     emit('update_results', {'question': question, 'votes': votes[question]}, broadcast=True)
 
