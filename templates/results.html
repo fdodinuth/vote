@@ -39,31 +39,12 @@
             text-align: center;
             padding: 20px 0;
         }
-        .legend {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 0 15px;
-            font-size: 1.2rem;
-            color: #fff;
-        }
-        .legend-color {
-            width: 30px;
-            height: 30px;
-            margin-right: 10px;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Real-Time Voting Results</h1>
         <canvas id="resultsChart"></canvas>
-        <div class="legend" id="answerLegend"></div>
     </div>
     <div class="footer">
         <p>&copy; 2025 Voting System. All rights reserved.</p>
@@ -76,23 +57,20 @@
 
         let chart = null;
 
-        // Listen for updates to the results from the host
         socket.on('update_results', function(data) {
-            console.log("Received update_results:", data);
-
             const questionVotes = data.votes;
             const answers = Object.keys(questionVotes);
             const votes = Object.values(questionVotes);
 
-            // If a chart already exists, destroy it and create a new one
+            // Destroy existing chart if present
             if (chart) {
-                chart.destroy(); // Destroy the existing chart
+                chart.destroy();
             }
 
-            // Create a new chart with the updated data (Bar chart)
+            // Create a new bar chart
             const ctx = document.getElementById('resultsChart').getContext('2d');
             chart = new Chart(ctx, {
-                type: 'bar', // Changed from 'pie' to 'bar'
+                type: 'bar', // Bar chart type
                 data: {
                     labels: answers,
                     datasets: [{
@@ -105,64 +83,15 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: {
-                                    size: 16, // Adjusted font size for better readability
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    return tooltipItem.label + ': ' + tooltipItem.raw + ' votes';
-                                }
-                            }
-                        }
-                    },
                     scales: {
                         x: {
-                            beginAtZero: true,
-                            ticks: {
-                                font: {
-                                    size: 14,
-                                    color: '#fff' // Color for x-axis labels
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.2)' // Light grid color for better contrast
-                            }
+                            beginAtZero: true
                         },
                         y: {
-                            beginAtZero: true,
-                            ticks: {
-                                font: {
-                                    size: 14,
-                                    color: '#fff' // Color for y-axis labels
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.2)' // Light grid color for better contrast
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
-            });
-
-            // Update answer legend
-            const legendDiv = document.getElementById('answerLegend');
-            legendDiv.innerHTML = ''; // Clear previous legend
-            answers.forEach((answer, index) => {
-                const legendItem = document.createElement('div');
-                legendItem.classList.add('legend-item');
-                const colorDiv = document.createElement('div');
-                colorDiv.classList.add('legend-color');
-                colorDiv.style.backgroundColor = chart.data.datasets[0].backgroundColor[index];
-                legendItem.appendChild(colorDiv);
-                legendItem.innerHTML += `${answer}`;
-                legendDiv.appendChild(legendItem);
             });
         });
     </script>
