@@ -93,8 +93,7 @@
                 // Emit the user's vote when a button is clicked
                 button.onclick = function() {
                     socket.emit('user_vote', {question: data.question, answer});
-                    // Optionally, disable all buttons after voting
-                    disableVoteButtons();
+                    disableVoteButtons();  // Disable all buttons after voting
                 };
                 answersDiv.appendChild(button);
             });
