@@ -44,7 +44,7 @@ def handle_user_vote(data):
 
     # Log updated votes
     logging.debug(f"Updated votes for '{question}': {votes[question]}")
-    
+
     # Send updated results to everyone (users and host)
     emit('update_results', {'question': question, 'votes': votes[question]}, broadcast=True)
 
