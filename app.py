@@ -1,13 +1,14 @@
 import logging
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
+import eventlet
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Initialize Flask app and SocketIO
+# Initialize Flask app and SocketIO with eventlet
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 # Store questions, answers, and votes
 questions = []
